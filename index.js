@@ -289,7 +289,7 @@ function onTyping(event) {
 
 module.exports = {
   name: "Clippy",
-  version: "1.0.0",
+  version: "1.0.1",
 
   onLoad: async (ctx) => {
     ctxRef = ctx;
