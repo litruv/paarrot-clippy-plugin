@@ -188,7 +188,7 @@ function scheduleIdle() {
 }
 
 function applyScale() {
-  const scale = ctxRef.settings.get('scale') || 1.5;
+  const scale = ctxRef.settings.get('scale') || 1;
   img.style.width = `${Math.round(124 * scale)}px`;
 }
 
@@ -219,7 +219,7 @@ function mount() {
   root.setAttribute('aria-label', 'Clippy assistant');
   root.style.cssText =
     'position:fixed;z-index:9999;display:flex;flex-direction:column;gap:6px;' +
-    'align-items:flex-start;cursor:grab;user-select:none;';
+    'align-items:flex-start;cursor:grab;user-select:none;touch-action:none;';
 
   balloon = document.createElement('div');
   balloon.style.cssText =
@@ -228,6 +228,7 @@ function mount() {
 
   img = document.createElement('img');
   img.alt = 'Clippy';
+  img.draggable = false;
   img.style.cssText = 'display:block;image-rendering:pixelated;';
 
   root.appendChild(balloon);
@@ -238,6 +239,10 @@ function mount() {
   applyPosition();
 
   root.addEventListener('pointerdown', (event) => {
+    // Capture keeps the move and up events on the sprite even when the pointer
+    // leaves it, so a drag always ends and the position is saved.
+    root.setPointerCapture(event.pointerId);
+
     const offsetX = event.clientX - root.offsetLeft;
     const offsetY = event.clientY - root.offsetTop;
 
@@ -249,13 +254,16 @@ function mount() {
     };
 
     const up = () => {
-      document.removeEventListener('pointermove', move);
-      document.removeEventListener('pointerup', up);
+      root.releasePointerCapture(event.pointerId);
+      root.removeEventListener('pointermove', move);
+      root.removeEventListener('pointerup', up);
+      root.removeEventListener('pointercancel', up);
       ctxRef.settings.set('position', `${root.offsetLeft},${root.offsetTop}`);
     };
 
-    document.addEventListener('pointermove', move);
-    document.addEventListener('pointerup', up);
+    root.addEventListener('pointermove', move);
+    root.addEventListener('pointerup', up);
+    root.addEventListener('pointercancel', up);
   });
 
   return root;
@@ -289,7 +297,7 @@ function onTyping(event) {
 
 module.exports = {
   name: "Clippy",
-  version: "1.0.1",
+  version: "1.0.2",
 
   onLoad: async (ctx) => {
     ctxRef = ctx;
@@ -305,7 +313,7 @@ module.exports = {
         type: 'number',
         label: 'Size',
         description: 'Sprite scale factor (frames are 124x93)',
-        default: 1.5,
+        default: 1,
       },
       speed: {
         type: 'number',
