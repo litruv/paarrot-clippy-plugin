@@ -71,7 +71,7 @@ function showBalloon(text) {
 
 function renderFrame() {
   const src = DATA.img[currentAnim][frameIndex];
-  if (src) img.src = src;
+  if (src) img.src = `data:image/png;base64,${src}`;
 }
 
 function frame() {
